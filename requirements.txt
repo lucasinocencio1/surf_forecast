@@ -3,3 +3,9 @@ pandas
 plotly
 streamlit
 beautifulsoup4
+pydantic
+requests
+geopy
+fastmcp
+pydantic
+requests
