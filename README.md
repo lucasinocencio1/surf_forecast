@@ -1,9 +1,8 @@
 
 # Surf Forecast
 
-Create an MVP in Python that uses Open-Meteo Marine (free, no API key required) to forecast swell height, swell period, swell direction, and wind conditions.
-
-## Como rodar
+A Python-based MVP that uses the Open-Meteo Marine API (free, no API key required) to forecast swell height, swell period, swell direction, and wind conditions. Search for any city name and the system will automatically convert it to latitude and longitude coordinates to retrieve weather data and wave forecasts. Includes a surf forecast MCP server that provides wave and surf conditions for any location worldwide.
+## How to start
 
 ```bash
 # 1) criar e ativar venv (opcional)
