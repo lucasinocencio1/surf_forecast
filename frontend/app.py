@@ -5,14 +5,28 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from forecast_service import ForecastService
-from tide_service import TideService
-from scoring import ScoreCalculator
-from config import (
-    SPOTS, TIMEZONE,
-    DEFAULT_LIMITS, DEFAULT_PESOS,
-    WORLDTIDES_API_KEY, WORLDTIDES_DAYS
-)
+from api.geocoding import geocode_location
+from api.marine import get_marine_forecast
+from api.weather import weather_forecast
+from services.forecast import ForecastService
+try:
+    from config import (
+        SPOTS, TIMEZONE,
+        DEFAULT_LIMITS, DEFAULT_PESOS,
+        WORLDTIDES_API_KEY, WORLDTIDES_DAYS
+    )
+except Exception:
+    # Fallbacks mínimos para rodar com entrada por cidade
+    SPOTS = []
+    TIMEZONE = "Europe/Lisbon"
+    DEFAULT_LIMITS = {"ALTURA_BOA_MIN": 0.6, "ALTURA_BOA_MAX": 2.2, "PERIODO_MIN_BOM": 8.0, "VENTO_MAX_OK": 12.0, "OFFSHORE_TOL": 30.0}
+    DEFAULT_PESOS = {"altura": 0.35, "periodo": 0.25, "vento": 0.25, "direcao": 0.15}
+    WORLDTIDES_API_KEY = ""
+    WORLDTIDES_DAYS = 2
+try:
+    from scoring import ScoreCalculator
+except Exception:
+    ScoreCalculator = None
 
 # ===== Tema (Light/Dark) =====
 if "theme_mode" not in st.session_state:
@@ -59,13 +73,32 @@ PLOTLY_TEMPLATE, WG_TH_BG, _TEXT = use_theme(st.session_state.theme_mode)
 
 # --------------------------------- SETUP ---------------------------------
 st.set_page_config(page_title="Surf Forecast PT", page_icon="🌊", layout="wide")
-st.title("🌊 Surf Forecast — Caparica | Carcavelos | Peniche")
-st.caption(f"Dados: Open-Meteo (Marine + Forecast) + WorldTides — fuso {TIMEZONE}")
-
-fs = ForecastService(timezone=TIMEZONE)
-ts = TideService(WORLDTIDES_API_KEY, timezone=TIMEZONE)
+st.title("🌊 Surf Forecast")
+st.caption("Dados: Open-Meteo (Marine + Forecast) + Geocoding (Nominatim)")
+fs = None
+ts = None
+spots_to_show = []
 
 # ---------------------------- SIDEBAR CONTROLS ----------------------------
+st.sidebar.header("Localização")
+city_query = st.sidebar.text_input("Cidade (ex: Carcavelos, Portugal)", value="", help="Digite e pressione Enter")
+if not city_query.strip():
+    st.info("Digite uma cidade na barra lateral para ver a previsão.")
+    st.stop()
+try:
+    lat, lon, full_name = geocode_location(city_query.strip())
+    st.success(f"Localização: {full_name} ({lat:.4f}, {lon:.4f})")
+    marine_data = get_marine_forecast(lat, lon)
+    weather_data = weather_forecast(lat, lon)
+    forecast = ForecastService.parse_forecast_data(
+        marine_data, weather_data, full_name, lat, lon
+    )
+    st.subheader(full_name)
+    st.text(forecast.to_llm_context())
+    st.stop()
+except Exception as e:
+    st.error(f"Erro ao obter previsão: {e}")
+    st.stop()
 st.sidebar.header("Modelo (vento/temperatura)")
 MODEL_LABELS = {"auto":"Auto (Best match)", "icon":"ICON (DWD)", "gfs":"GFS (NOAA)", "ecmwf":"ECMWF"}
 model_key = st.sidebar.selectbox(
@@ -248,7 +281,7 @@ def plot_combined(df_m, df_f, df_scored, tide_df, spot_name, model_key, shade_th
     return fig
 
 # ---------------------------------- LOOP ----------------------------------
-for spot in SPOTS:
+for spot in spots_to_show:
     st.markdown("---")
     st.subheader(f"🏖️ {spot['nome']}")
 
