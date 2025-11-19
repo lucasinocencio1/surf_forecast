@@ -28,7 +28,7 @@ try:
 except Exception:
     ScoreCalculator = None
 
-# ===== Tema (Light/Dark) =====
+# ===== Tema (Light/Dark.) =====
 if "theme_mode" not in st.session_state:
     st.session_state.theme_mode = "light"  # default
 
