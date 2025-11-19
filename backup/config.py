@@ -22,4 +22,4 @@ DEFAULT_PESOS = dict(altura=0.35, periodo=0.35, vento=0.10, direcao=0.20)
 
 # WorldTides API
 WORLDTIDES_API_KEY = "b2d79182-e551-4cbe-a56c-3f6849829d35"
-WORLDTIDES_DAYS = 3  # dias de previsão de maré (1–7 no free tier)
+WORLDTIDES_DAYS = 3  # dias de previsão de maré (1–7 no free tier) (BACKUP OLD CODE)
