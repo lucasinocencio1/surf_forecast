@@ -28,7 +28,7 @@ def geocode_location(city_name: str) -> tuple[float, float, str]:
     return location.latitude, location.longitude, location.address
 
 if __name__ == "__main__":
-    city_query = " ".join(sys.argv[1:]).strip() or "Porto" #example: python api/geocoding.py "Porto"
+    city_query = " ".join(sys.argv[1:]).strip() or "Lisbon" #example: python api/geocoding.py "Lisbon"
     try:
         lat, lon, addr = geocode_location(city_query)
         print(addr)
